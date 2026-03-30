@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# IDE / System
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Sui / Blockchain
+/contracts/build/
+/contracts/deployment-*.json
+.sui/
+
+# Temp / Local logs
+*.log
+memory.md
+EVE_FRONTIER_HACKATHON_RESEARCH.md
+SUBMISSION.md

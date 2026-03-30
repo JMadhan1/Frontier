@@ -1,0 +1,15 @@
+[package]
+name = "frontier_trade_hub"
+version = "1.0.0"
+edition = "2024.beta"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
+
+[addresses]
+frontier_trade_hub = "0x0"
+sui = "0x2"
+
+[environments]
+devnet = "e9eed8f1"
+testnet = "4c78adac"
