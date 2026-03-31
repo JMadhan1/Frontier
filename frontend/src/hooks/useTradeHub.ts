@@ -56,8 +56,11 @@ export function useTradeHub() {
 
       const fields = tradeHub.data.content.fields as Record<string, unknown>;
       
-      // Parse active listing IDs
-      const activeIds = (fields.active_listing_ids as { fields: { contents: string[] } })?.fields?.contents || [];
+      // Parse active listing IDs — Sui returns vector<u64> as plain array OR wrapped object
+      const rawIds = fields.active_listing_ids;
+      const activeIds: string[] = Array.isArray(rawIds)
+        ? (rawIds as string[])
+        : (rawIds as { fields: { contents: string[] } })?.fields?.contents ?? [];
       
       // Fetch each listing
       const listingPromises = activeIds.map(async (id: string) => {
