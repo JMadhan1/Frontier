@@ -7,9 +7,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
-import { Listing, TradeHubStats, CreateListingForm, SUI_CLOCK_OBJECT_ID, DEFAULT_GAS_BUDGET } from '@/types';
+import { Listing, TradeHubStats, CreateListingForm, StoredTerminal, SUI_CLOCK_OBJECT_ID, DEFAULT_GAS_BUDGET } from '@/types';
 import { parseSuiToMist } from '@/utils/format';
-import { getTradeHubConfig, TRADE_HUB_MODULE, FUNCTIONS, debugLog } from '@/utils/config';
+import { getTradeHubConfig, TRADE_HUB_MODULE, TRADE_TERMINAL_MODULE, FUNCTIONS, TERMINAL_FUNCTIONS, debugLog } from '@/utils/config';
 
 /**
  * Hook for interacting with the TradeHub contract
@@ -23,6 +23,9 @@ export function useTradeHub() {
   const [stats, setStats] = useState<TradeHubStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMockData, setIsMockData] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [terminals, setTerminals] = useState<StoredTerminal[]>([]);
 
   const config = getTradeHubConfig();
 
@@ -93,14 +96,18 @@ export function useTradeHub() {
         feeBps: Number(fields.fee_bps || 100),
       });
 
+      setIsMockData(false);
+      setLastUpdated(new Date());
       debugLog('Listings fetched:', fetchedListings.length);
     } catch (err) {
       console.error('Failed to fetch listings:', err);
       setError('Failed to fetch listings. Please try again.');
-      
-      // Use mock data for development
+
+      // Use mock data as fallback
       setListings(getMockListings());
       setStats(getMockStats());
+      setIsMockData(true);
+      setLastUpdated(new Date());
     } finally {
       setIsLoading(false);
     }
@@ -213,9 +220,131 @@ export function useTradeHub() {
     return listings.filter(l => l.seller === currentAccount.address);
   }, [listings, currentAccount?.address]);
 
+  // Load terminals from localStorage when account changes
+  useEffect(() => {
+    if (!currentAccount?.address) { setTerminals([]); return; }
+    try {
+      const stored = localStorage.getItem(`terminals_${currentAccount.address}`);
+      setTerminals(stored ? JSON.parse(stored) : []);
+    } catch { setTerminals([]); }
+  }, [currentAccount?.address]);
+
+  // Register a new Trade Terminal from an EVE Frontier Smart Assembly
+  const registerTerminal = useCallback(async (assemblyId: string, location: string): Promise<string> => {
+    if (!currentAccount?.address) throw new Error('Wallet not connected');
+
+    const tx = new Transaction();
+    tx.setGasBudget(DEFAULT_GAS_BUDGET);
+    tx.moveCall({
+      target: `${config.packageId}::${TRADE_TERMINAL_MODULE}::${TERMINAL_FUNCTIONS.REGISTER}`,
+      arguments: [
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(assemblyId))),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(location))),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const result = await signAndExecute({ transaction: tx as never });
+
+    // Extract created object IDs from transaction effects
+    const txDetails = await client.getTransactionBlock({
+      digest: result.digest,
+      options: { showObjectChanges: true },
+    });
+
+    const terminalObj = txDetails.objectChanges?.find(
+      (c) => c.type === 'created' && (c as { objectType?: string }).objectType?.includes('TradeTerminal')
+    ) as { objectId: string } | undefined;
+    const capObj = txDetails.objectChanges?.find(
+      (c) => c.type === 'created' && (c as { objectType?: string }).objectType?.includes('TerminalCap')
+    ) as { objectId: string } | undefined;
+
+    if (terminalObj && capObj) {
+      const newTerminal: StoredTerminal = {
+        id: terminalObj.objectId,
+        capId: capObj.objectId,
+        assemblyId,
+        location,
+        registeredAt: Date.now(),
+      };
+      const updated = [...terminals, newTerminal];
+      setTerminals(updated);
+      localStorage.setItem(`terminals_${currentAccount.address}`, JSON.stringify(updated));
+    }
+
+    return result.digest;
+  }, [currentAccount?.address, config, signAndExecute, client, terminals]);
+
+  // Sync an in-game item from SSU into the terminal's on-chain inventory
+  const syncItemToTerminal = useCallback(async (
+    terminalId: string,
+    capId: string,
+    itemId: string,
+    itemName: string,
+    quantity: number,
+    category: string,
+  ): Promise<string> => {
+    if (!currentAccount?.address) throw new Error('Wallet not connected');
+
+    const tx = new Transaction();
+    tx.setGasBudget(DEFAULT_GAS_BUDGET);
+    tx.moveCall({
+      target: `${config.packageId}::${TRADE_TERMINAL_MODULE}::${TERMINAL_FUNCTIONS.SYNC_ITEM}`,
+      arguments: [
+        tx.object(terminalId),
+        tx.object(capId),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(itemId))),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(itemName))),
+        tx.pure.u64(quantity),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(category))),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const result = await signAndExecute({ transaction: tx as never });
+    return result.digest;
+  }, [currentAccount?.address, config, signAndExecute]);
+
+  // List an item from terminal inventory directly onto the marketplace
+  const listThroughTerminal = useCallback(async (
+    terminalId: string,
+    capId: string,
+    itemId: string,
+    quantity: number,
+    priceSui: string,
+  ): Promise<string> => {
+    if (!currentAccount?.address) throw new Error('Wallet not connected');
+
+    const price = parseSuiToMist(priceSui);
+    const tx = new Transaction();
+    tx.setGasBudget(DEFAULT_GAS_BUDGET);
+    tx.moveCall({
+      target: `${config.packageId}::${TRADE_TERMINAL_MODULE}::${TERMINAL_FUNCTIONS.LIST_THROUGH}`,
+      arguments: [
+        tx.object(terminalId),
+        tx.object(config.tradeHubObjectId),
+        tx.object(capId),
+        tx.pure.vector('u8', Array.from(new TextEncoder().encode(itemId))),
+        tx.pure.u64(quantity),
+        tx.pure.u64(price),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const result = await signAndExecute({ transaction: tx as never });
+    await fetchListings();
+    return result.digest;
+  }, [currentAccount?.address, config, signAndExecute, fetchListings]);
+
   // Fetch listings on mount and account change
   useEffect(() => {
     fetchListings();
+  }, [fetchListings]);
+
+  // Auto-refresh listings every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => { fetchListings(); }, 15000);
+    return () => clearInterval(interval);
   }, [fetchListings]);
 
   return {
@@ -225,10 +354,16 @@ export function useTradeHub() {
     isLoading,
     isTransactionPending,
     error,
+    isMockData,
+    lastUpdated,
+    terminals,
     fetchListings,
     listItem,
     buyItem,
     cancelListing,
+    registerTerminal,
+    syncItemToTerminal,
+    listThroughTerminal,
   };
 }
 

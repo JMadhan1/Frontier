@@ -156,7 +156,18 @@ export interface WalletState {
 /**
  * Tab options for the marketplace
  */
-export type MarketplaceTab = 'all' | 'my-listings' | 'create';
+export type MarketplaceTab = 'all' | 'my-listings' | 'create' | 'terminals';
+
+/**
+ * A Trade Terminal stored locally after registration
+ */
+export interface StoredTerminal {
+  id: string;        // TradeTerminal object ID
+  capId: string;     // TerminalCap object ID
+  assemblyId: string;
+  location: string;
+  registeredAt: number;
+}
 
 /**
  * Sort options for listings

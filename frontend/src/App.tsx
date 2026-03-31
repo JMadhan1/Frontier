@@ -12,6 +12,7 @@ import Dashboard from '@/components/Dashboard';
 import ListingsTable from '@/components/ListingsTable';
 import MyListings from '@/components/MyListings';
 import CreateListing from '@/components/CreateListing';
+import SmartTerminals from '@/components/SmartTerminals';
 import BuyModal from '@/components/BuyModal';
 import ToastContainer from '@/components/ToastContainer';
 import { useWallet } from '@/hooks/useWallet';
@@ -101,13 +102,32 @@ function App() {
     }
   };
 
+  // Handle terminal registration
+  const handleRegisterTerminal = async (assemblyId: string, location: string) => {
+    const txDigest = await tradeHub.registerTerminal(assemblyId, location);
+    toast.success('Terminal Registered!', `SSU ${assemblyId} is now a Trade Terminal`);
+    return txDigest;
+  };
+
+  // Handle sync item to terminal
+  const handleSyncItem = async (terminalId: string, capId: string, itemId: string, itemName: string, quantity: number, category: string) => {
+    const txDigest = await tradeHub.syncItemToTerminal(terminalId, capId, itemId, itemName, quantity, category);
+    toast.success('Item Synced!', `${quantity}x ${itemName} synced to terminal`);
+    return txDigest;
+  };
+
+  // Handle list through terminal
+  const handleListThrough = async (terminalId: string, capId: string, itemId: string, quantity: number, price: string) => {
+    const txDigest = await tradeHub.listThroughTerminal(terminalId, capId, itemId, quantity, price);
+    toast.success('Listed via Terminal!', `Item listed on marketplace through Smart Assembly`);
+    return txDigest;
+  };
+
   return (
     <ToastContext.Provider value={{ toast }}>
-      <div className="min-h-screen bg-gradient-space">
-        {/* Background effects */}
-        <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
-        <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyber-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-neon-purple/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-[#0d1117]">
+        {/* Subtle background grid */}
+        <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none" />
 
         {/* Main content */}
         <div className="relative z-10">
@@ -122,7 +142,7 @@ function App() {
               <Route path="/" element={
                 <>
                   {/* Stats Dashboard */}
-                  <Dashboard stats={tradeHub.stats} isLoading={tradeHub.isLoading} />
+                  <Dashboard stats={tradeHub.stats} isLoading={tradeHub.isLoading} isMockData={tradeHub.isMockData} lastUpdated={tradeHub.lastUpdated} />
 
                   {/* Tab Content */}
                   <div className="mt-8">
@@ -150,6 +170,17 @@ function App() {
                         onSubmit={handleCreateListing}
                         isConnected={wallet.isConnected}
                         isTransactionPending={tradeHub.isTransactionPending}
+                      />
+                    )}
+
+                    {activeTab === 'terminals' && (
+                      <SmartTerminals
+                        terminals={tradeHub.terminals}
+                        isConnected={wallet.isConnected}
+                        isTransactionPending={tradeHub.isTransactionPending}
+                        onRegister={handleRegisterTerminal}
+                        onSyncItem={handleSyncItem}
+                        onListThrough={handleListThrough}
                       />
                     )}
                   </div>

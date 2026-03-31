@@ -117,12 +117,27 @@ export function getExplorerAddressUrl(address: string, network?: NetworkType): s
 export const TRADE_HUB_MODULE = 'trade_hub';
 
 /**
+ * Trade Terminal module name
+ */
+export const TRADE_TERMINAL_MODULE = 'trade_terminal';
+
+/**
  * Move function names
  */
 export const FUNCTIONS = {
   LIST_ITEM: 'list_item',
   BUY_ITEM: 'buy_item',
   CANCEL_LISTING: 'cancel_listing',
+} as const;
+
+/**
+ * Trade Terminal function names
+ */
+export const TERMINAL_FUNCTIONS = {
+  REGISTER: 'register_terminal',
+  SYNC_ITEM: 'sync_item_from_ssu',
+  LIST_THROUGH: 'list_item_through_terminal',
+  TOGGLE: 'toggle_terminal',
 } as const;
 
 /**

@@ -1,14 +1,12 @@
 /**
- * Frontier Trade Hub - Header Component
- * 
- * Navigation header with branding, tabs, and wallet connection
+ * Frontier Trade Hub - Header Component (v0 design)
  */
 
 import { ConnectButton } from '@mysten/dapp-kit';
-import { Rocket, LayoutDashboard, List, PlusCircle, RefreshCw } from 'lucide-react';
+import { Rocket, Wallet } from 'lucide-react';
 import { MarketplaceTab } from '@/types';
 import { formatSui, truncateAddress, cn } from '@/utils/format';
-import { getCurrentNetwork, getNetworkConfig } from '@/utils/config';
+import { getNetworkConfig } from '@/utils/config';
 
 interface HeaderProps {
   wallet: {
@@ -21,112 +19,83 @@ interface HeaderProps {
   onTabChange: (tab: MarketplaceTab) => void;
 }
 
-const tabs: { id: MarketplaceTab; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'all', label: 'All Listings', icon: LayoutDashboard },
-  { id: 'my-listings', label: 'My Listings', icon: List },
-  { id: 'create', label: 'Create Listing', icon: PlusCircle },
+const tabs: { id: MarketplaceTab; label: string; badge?: string }[] = [
+  { id: 'all', label: 'All Listings' },
+  { id: 'my-listings', label: 'My Listings' },
+  { id: 'create', label: 'Create Listing' },
+  { id: 'terminals', label: 'Smart Terminals', badge: 'EVE' },
 ];
 
 export default function Header({ wallet, activeTab, onTabChange }: HeaderProps) {
-  const network = getCurrentNetwork();
   const networkConfig = getNetworkConfig();
 
   return (
-    <header className="border-b border-space-600 bg-space-900/80 backdrop-blur-md sticky top-0 z-50">
+    <header className="bg-[#0d1117] border-b border-[#21262d] sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        {/* Top bar */}
-        <div className="flex items-center justify-between py-4">
-          {/* Logo and branding */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-gradient-cyber flex items-center justify-center shadow-cyber">
-                <Rocket className="w-7 h-7 text-space-900" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-neon-green rounded-full animate-pulse" />
+        <div className="flex items-center h-14 gap-6">
+
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-gradient-cyber flex items-center justify-center shadow-cyber">
+              <Rocket className="w-5 h-5 text-[#0d1117]" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold font-space text-gradient-cyber">
-                FRONTIER TRADE HUB
-              </h1>
-              <p className="text-xs text-gray-500">
-                Decentralized Marketplace for EVE Frontier
-              </p>
-            </div>
+            <span className="text-sm font-bold tracking-widest">
+              <span className="text-cyber-400">FRONTIER</span>{' '}
+              <span className="text-white">TRADE HUB</span>
+            </span>
           </div>
 
-          {/* Right side - Network badge and wallet */}
-          <div className="flex items-center gap-4">
+          {/* Nav tabs */}
+          <nav className="flex items-center flex-1">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-4 h-14 text-sm font-medium transition-all border-b-2 whitespace-nowrap',
+                    isActive
+                      ? 'border-cyber-400 text-white'
+                      : 'border-transparent text-[#7d8590] hover:text-[#c9d1d9]'
+                  )}
+                >
+                  {tab.label}
+                  {tab.badge && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-neon-purple/20 text-neon-purple border border-neon-purple/30 rounded-full">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right: Network + Wallet */}
+          <div className="flex items-center gap-2 shrink-0">
             {/* Network indicator */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-space-800 rounded-full border border-space-600">
-              <div className={cn(
-                'w-2 h-2 rounded-full',
-                network === 'stillness' ? 'bg-neon-green' : 'bg-neon-orange'
-              )} />
-              <span className="text-xs text-gray-400 font-medium">
-                {networkConfig.displayName}
-              </span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-neon-orange/10 border border-neon-orange/30 rounded-full text-xs text-neon-orange font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-neon-orange" />
+              {networkConfig.displayName}
             </div>
 
-            {/* Wallet info */}
-            {wallet.isConnected && wallet.address && (
-              <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-space-800/50 rounded-lg border border-space-600">
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">Balance</p>
-                  <p className="text-sm font-semibold text-cyber-400">
-                    {formatSui(wallet.balance)} SUI
-                  </p>
+            {/* Wallet display */}
+            {wallet.isConnected && wallet.address ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#161b22] border border-[#30363d] rounded-lg">
+                <div className="w-6 h-6 rounded bg-cyber-400/20 flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-cyber-400" />
                 </div>
-                <div className="w-px h-8 bg-space-600" />
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">Address</p>
-                  <p className="text-sm font-mono text-gray-300">
-                    {truncateAddress(wallet.address)}
-                  </p>
+                <div>
+                  <p className="text-xs font-bold text-cyber-400 leading-tight">{formatSui(wallet.balance)} SUI</p>
+                  <p className="text-[10px] text-[#7d8590] font-mono leading-tight">{truncateAddress(wallet.address)}</p>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Connect button */}
-            <ConnectButton
-              connectText="Connect Wallet"
-              className="btn-cyber"
-            />
+            <ConnectButton connectText="Connect Wallet" className="!text-xs" />
           </div>
+
         </div>
-
-        {/* Navigation tabs */}
-        <nav className="flex items-center gap-1 -mb-px overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200',
-                  'border-b-2 -mb-px whitespace-nowrap',
-                  isActive
-                    ? 'border-cyber-400 text-cyber-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-space-500'
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-
-          {/* Refresh button */}
-          <button
-            onClick={() => window.location.reload()}
-            className="ml-auto flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-cyber-400 transition-colors"
-            title="Refresh data"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </nav>
       </div>
     </header>
   );
