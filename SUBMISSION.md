@@ -39,17 +39,16 @@ This is a $0 trustless trading volume problem sitting on top of a game specifica
 
 ---
 
-## Deployed Contracts (Sui Testnet)
-
-> ⚠️ Originally deployed to Devnet (0x332ee...) — redeployed to Testnet for stability and Slush wallet compatibility.
+## Deployed Contracts (Sui Devnet)
 
 | Contract | Address |
 |----------|---------|
-| **Package ID** | `0x332ee2997d16a70955c39b96df11634cd76053d61252e052933f661de0781a37` |
-| **TradeHub Object** | `0x6660bee0e8a51f468d4339d9be070f951e063f9e851d66519eea7eefeebb5b42` |
-| **AdminCap** | `0xec5023413ae6159546fa7fa5a8c7522dd9020f8d938515a9f43d80f2f42fe791` |
-| **Network** | Sui Testnet |
+| **Package ID** | `0x268008bce8db9538011752023339f0bdf5c0dcb9a5569e8f566d58bdc1a6b03a` |
+| **TradeHub Object** | `0x2ea0a6bf4e96438103823f227ed96004ba2f17140a26defec2f83c5d31bf98c0` |
+| **AdminCap** | `0xe07a8a8941a7358bc65ff8d6a3135b9b1a6a12b9decb299b2e9b77da15041616` |
+| **Network** | Sui Devnet |
 | **Deployer** | `0x52224c02c41f3539096f4182696e1beed546c21aea5215f0d1630757b89389f0` |
+| **Tx Digest** | `48C38anmwMQgWGYQxC45H6RkrkLm3t27RSi9xWHvkMBp` |
 
 ### Modules Deployed
 - `frontier_trade_hub::trade_hub` — core P2P marketplace
@@ -144,7 +143,7 @@ Test result: OK. Total tests: 3; passed: 3; failed: 0
 
 - **GitHub**: https://github.com/your-team/frontier-trade-hub *(update before submission)*
 - **Demo Video**: *(link to be added)*
-- **Explorer (deploy tx)**: https://suiscan.xyz/devnet/tx/9Eg7sDtD3wGViwY2M17Rs68MUkJLzJETpdHWvtNSCrNP
+- **Explorer (deploy tx)**: https://suiscan.xyz/devnet/tx/48C38anmwMQgWGYQxC45H6RkrkLm3t27RSi9xWHvkMBp
 
 ---
 

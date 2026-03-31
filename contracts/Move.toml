@@ -11,5 +11,5 @@ frontier_trade_hub = "0x0"
 sui = "0x2"
 
 [environments]
-devnet = "e9eed8f1"
+devnet = "f754f647"
 testnet = "4c78adac"
