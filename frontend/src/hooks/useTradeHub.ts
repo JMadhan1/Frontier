@@ -73,21 +73,18 @@ export function useTradeHub() {
         });
 
         if (listingData.data?.content && listingData.data.content.dataType === 'moveObject') {
-          const listingFields = (listingData.data.content.fields as Record<string, unknown>).value as Record<string, unknown>;
-          // item_id and item_name are vector<u8> — decode bytes to string
-          const decodeBytes = (v: unknown): string => {
-            if (Array.isArray(v)) return new TextDecoder().decode(new Uint8Array(v as number[]));
-            return String(v);
-          };
+          // Dynamic field structure: content.fields.value.fields = actual Listing fields
+          const valueWrapper = (listingData.data.content.fields as Record<string, unknown>).value as { fields: Record<string, unknown> };
+          const f = valueWrapper.fields;
           return {
-            listingId: String(listingFields.listing_id),
-            itemId: decodeBytes(listingFields.item_id),
-            itemName: decodeBytes(listingFields.item_name),
-            quantity: Number(listingFields.quantity),
-            price: BigInt(String(listingFields.price ?? '0')),
-            seller: String(listingFields.seller),
-            timestamp: Number(listingFields.timestamp ?? 0),
-            isActive: Boolean(listingFields.is_active),
+            listingId: String(f.listing_id),
+            itemId: String(f.item_id),
+            itemName: String(f.item_name),
+            quantity: Number(f.quantity),
+            price: BigInt(String(f.price ?? '0')),
+            seller: String(f.seller),
+            timestamp: Number(f.timestamp ?? 0),
+            isActive: Boolean(f.is_active),
           } as Listing;
         }
         return null;
