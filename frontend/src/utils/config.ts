@@ -43,14 +43,14 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
     packageId: import.meta.env.VITE_TRADE_HUB_PACKAGE_ID_STILLNESS || '0x0',
     tradeHubObjectId: import.meta.env.VITE_TRADE_HUB_OBJECT_ID_STILLNESS || '0x0',
   },
-  // Sui Testnet - For local development / fallback
+  // Sui Devnet - For development / hackathon demo
   devnet: {
     name: 'devnet',
-    displayName: 'Sui Testnet',
-    rpcUrl: import.meta.env.VITE_SUI_RPC_DEVNET || 'https://fullnode.testnet.sui.io',
-    explorerUrl: 'https://suiscan.xyz/testnet',
-    packageId: import.meta.env.VITE_TRADE_HUB_PACKAGE_ID_DEVNET || '0x0',
-    tradeHubObjectId: import.meta.env.VITE_TRADE_HUB_OBJECT_ID_DEVNET || '0x0',
+    displayName: 'Sui Devnet',
+    rpcUrl: import.meta.env.VITE_SUI_RPC_DEVNET || 'https://fullnode.devnet.sui.io:443',
+    explorerUrl: 'https://suiscan.xyz/devnet',
+    packageId: import.meta.env.VITE_TRADE_HUB_PACKAGE_ID_DEVNET || '0x268008bce8db9538011752023339f0bdf5c0dcb9a5569e8f566d58bdc1a6b03a',
+    tradeHubObjectId: import.meta.env.VITE_TRADE_HUB_OBJECT_ID_DEVNET || '0x2ea0a6bf4e96438103823f227ed96004ba2f17140a26defec2f83c5d31bf98c0',
   },
 };
 
